@@ -11,8 +11,9 @@ const progressBar = document.getElementById("progressBar");
 const getFavouritesBtn = document.getElementById("getFavouritesBtn");
 
 // Step 0: Store your API key here for reference and easy access.
-const API_KEY = "live_Fj3XbEHMoJNXbVmgCXSU1jLBVpsUyYssP37sNX5W5iXHR3xttQJUOsrmkW5yohoK";
-
+// const API_KEY = "live_Fj3XbEHMoJNXbVmgCXSU1jLBVpsUyYssP37sNX5W5iXHR3xttQJUOsrmkW5yohoK";
+// Colton
+const API_KEY = "live_XNrwe2xINpyUkI0cpp6ugcj7JEc916gcAyaytZBEYMI2vZfp0YCCDahtWPnT2AJd";
 // interceptor acts like a middle person in a request
 axios.interceptors.request.use(config => {
     console.log(new Date());
@@ -38,19 +39,24 @@ async function initialLoad() {
         const breeds = res.data;
 
         // PART 2
-        breedSelect.innerHTML = breeds.map(
-            (breed) => `<option value = ${breed.id}>${breed.name}</option>`
-        )
-       
+        // breedSelect.innerHTML = breeds.map(
+        //     (breed) => `<option value = ${breed.id}>${breed.name}</option>`
+        // )
+        // for each instead of map
+        breeds.forEach(breed => { const option = document.createElement("option"); option.value = breed.id; option.textContent = breed.name; breedSelect.appendChild(option); });
+
         //get the data from the response
         console.log(breeds);
-        breedSelection()
-        
+        breedSelection(breeds[0].id)
+
     } catch (e) {
         console.error(e)
     }
 }
 initialLoad();
+
+// this function doesn't work here but I don't know where to put it
+// updateProgressBar();
 
 // progressBar.style.width = '0%';
 
@@ -88,32 +94,48 @@ initialLoad();
 // breedSelect & appendCarousel need to be used in this section
 
 breedSelect.addEventListener("change", breedSelection)
-async function breedSelection() {
+async function breedSelection(breedId) {
+    console.log(breedId);
     try {
+       
         const breedId = breedSelect.value
-        const res = await axios.get(`https://api.thecatapi.com/v1/images/search?limit=10&breed_ids=${breedId}`)
-        const imgs = res.data
-        // console.log(imgs);
-        Carousel.clear();
+       
+        const res = await axios.get(`/images/search`, { params: { breed_ids: breedId, limit: 10 } });
+         infoDump.innerHTML = ""
+         Carousel.clear();
+        const imgs = res.data;
+        console.log(imgs);
+        // Carousel.clear();
+
+
+        //         `
+        // <h3>${catInfo.name}</h3>
+        // `
         imgs.forEach((img) => {
             Carousel.appendCarousel(Carousel.createCarouselItem(img.url, "cat image", img.id));
         });
-
+        const breedInfo = res.data[0]
+        console.log(breedInfo)
         // display breed info -- not working 
         // const breedInfo = catImgs[0]?.breeds[0];
-        // if (breedInfo) {
-        //     infoDump.innerHTML = `
-        //   <h3>${breedInfo.name}</h3>
-        //   <p><strong>Temperament:</strong> ${breedInfo.temperament}</p>
-        //   <p><strong>Life Span:</strong> ${breedInfo.life_span} years</p>
-        //   <p>${breedInfo.description}</p>
-        // `}
+        if (breedInfo) {
+            infoDump.innerHTML = `
+          <h3>${breedInfo.name}</h3>
+          <p><strong>Temperament:</strong> ${breedInfo.temperament}</p>
+          <p><strong>Life Span:</strong> ${breedInfo.life_span} years</p>
+          <p>${breedInfo.description}</p>
+        `} else {
+            infoDump.innerHTML = `<h3>No info</h3>`
+        }
 
         Carousel.start();
     } catch (error) {
         console.error(error)
     }
 }
+
+
+
 
 
 /**
@@ -179,12 +201,15 @@ Create an additional file to handle an alternative approach. || Fork your own sa
 
 // not working yet
 function updateProgressBar(progressPercentage) {
-
+if (progressPercentage.lengthComputable) {
+    const percentComplete = (progressPercentage.loaded / progressPercentage.total) * 100;
+    progressBar.style.width = `${percentComplete}%`;
+}
     // const progressBar = document.querySelector('.progress-bar');
-  
-    progressBar.style.width = progressPercentage + "%"; 
-  
-  }
+
+    // progressBar.style.width = progressPercentage + "%";
+
+}
 
 
 
@@ -211,6 +236,14 @@ function updateProgressBar(progressPercentage) {
  */
 export async function favourite(imgId) {
     // your code here
+try {
+    const res = await axios.post('/favourites', {
+        image_id: imgId,
+    })
+    console.log(res.data)
+} catch (error) {
+    console.error(error)
+}
 }
 
 
